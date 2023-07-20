@@ -161,11 +161,11 @@ impl FilesystemInfo {
 #[allow(dead_code)]
 #[repr(u32)]
 pub enum LoadingType {
-    Directory = 0,
-    Unk1 = 1,
-    Unk2 = 2,
-    Unk3 = 3,
-    File = 4,
+    LoadFromFilePackage = 0,
+    LoadFromFileGroup = 1,
+    LoadFromRegionalFileGroup = 2,
+    Impossible = 3,
+    StandaloneFile = 4,
 }
 
 #[allow(dead_code)]
@@ -183,7 +183,7 @@ pub struct ResServiceNX {
     pub res_inflate_thread: *mut nn::os::ThreadType,
     pub load_request_buffer: *const (),
     pub res_lists: [ResList; 5],
-    pub filesystem_info: *mut FilesystemInfo,
+    pub filesystem_info: &'static mut FilesystemInfo,
     pub locale_idx: u32,
     pub language_idx: Region,
     pub loading_thread_state: u32,
@@ -197,11 +197,11 @@ pub struct ResServiceNX {
     unk6: *const (),
     pub data_arc_filenx: *mut *mut File_NX,
     pub buffer_size: usize,
-    pub buffer_array: [*const u8; 2],
+    pub buffer_array: [*mut u8; 2],
     pub buffer_array_idx: u32,
     unk12: u32,
     pub data_ptr: *const u8,
-    pub offset_into_read: u64,
+    pub offset_into_read: usize,
     pub processing_file_idx_curr: u32,
     pub processing_file_idx_count: u32,
     pub processing_file_idx_start: u32,

@@ -4,6 +4,8 @@ use std::{
     ptr::null,
 };
 
+use skyline::libc::{self, c_void};
+
 #[derive(Debug)]
 #[repr(C)]
 pub struct CppVector<T> {
@@ -252,8 +254,8 @@ impl<'a, T> Iterator for CppVectorIteratorMut<'a, T> {
 #[repr(u32)]
 #[derive(Debug, Copy, Clone)]
 pub enum LoadType {
-    Directory = 0x0,
-    File = 0x1,
+    LoadFromFilePackage = 0x0,
+    StandaloneFile = 0x1,
 }
 
 #[repr(C)]
@@ -300,6 +302,17 @@ pub struct ResList {
 }
 
 impl ResList {
+    pub unsafe fn delete(&mut self) {
+        let mut node = self.next;
+        for _ in 0..self.size {
+            let tmp = node;
+            node = (*node).next;
+            libc::free(tmp as *mut c_void);
+        }
+        self.next = std::ptr::null_mut();
+        self.end = std::ptr::null_mut();
+        self.size = 0;
+    }
     pub fn get_node(&self, idx: usize) -> Option<&ListNode> {
         if idx >= self.size {
             None

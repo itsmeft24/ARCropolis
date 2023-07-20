@@ -170,7 +170,7 @@ fn res_loop_common() {
 
     for (list_idx, list) in service.res_lists.iter().enumerate() {
         for entry in list.iter() {
-            if let LoadType::Directory = entry.ty {
+            if let LoadType::LoadFromFilePackage = entry.ty {
                 for info in file_infos[dir_infos[entry.directory_index as usize].file_info_range()].iter() {
                     if info.flags.standalone_file() {
                         standalone_files[list_idx].push(info.file_path_index);
@@ -188,7 +188,7 @@ fn res_loop_common() {
                 file_paths[path_idx].path.hash40().0
             );
             service.res_lists[idx].insert(LoadInfo {
-                ty: LoadType::File,
+                ty: LoadType::StandaloneFile,
                 filepath_index: path_idx.0,
                 directory_index: 0xFF_FFFF,
                 files_to_load: 0,
@@ -198,5 +198,5 @@ fn res_loop_common() {
 }
 
 pub fn install() {
-    skyline::install_hooks!(inflate_incoming, inflate_dir_file, res_loop_start, res_loop_refresh);
+    // skyline::install_hooks!(inflate_incoming, inflate_dir_file, res_loop_start, res_loop_refresh);
 }
