@@ -4,9 +4,10 @@ use std::{
 };
 
 use skyline::nn;
-use smash_arc::{LoadedArc, LoadedSearchSection};
+use smash_arc::{LoadedArc, LoadedSearchSection, Region};
 
-use super::containers::{CppVector, ResList};
+use super::{containers::{CppVector, ResList}, nu};
+use super::nu::*;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -134,8 +135,8 @@ pub struct FilesystemInfo {
     pub loaded_filepath_list: CppVector<u32>,
     pub loaded_directories: *const LoadedDirectory,
     pub loaded_directory_len: u32,
-    pub unk: u32,
-    pub unk2: CppVector<u32>,
+    pub loaded_directory_count: u32,
+    pub loaded_directory_list: CppVector<u32>,
     pub unk3: u8,
     pub unk4: [u8; 7],
     pub addr: *const (),
@@ -157,19 +158,6 @@ impl FilesystemInfo {
     }
 }
 
-#[repr(C)]
-pub struct FileNX {
-    vtable: *const (),
-    unk1: *const (),
-    unk2: u32,
-    pub is_open: u32,
-    pub file_handle: *mut nn::fs::FileHandle,
-    pub unk3: u32,
-    pub position: u64,
-    pub filename_fixedstring: [u8; 516],
-    unk4: u32,
-}
-
 #[allow(dead_code)]
 #[repr(u32)]
 pub enum LoadingType {
@@ -184,27 +172,30 @@ pub enum LoadingType {
 #[repr(C)]
 pub struct ResServiceNX {
     pub mutex: *mut nn::os::MutexType,
-    pub res_update_event: *mut nn::os::EventType,
-    unk1: *const (),
-    pub io_swap_event: *mut nn::os::EventType,
-    unk2: *const (),
-    pub semaphore1: *const (),
-    pub semaphore2: *const (),
+    pub res_update_event: *mut nu::SystemEventPlatform,
+    pub unk1: *mut nu::SystemEventPlatform,
+    pub io_swap_event: *mut nu::SystemEventPlatform,
+    pub unk2: *mut nu::SystemEventPlatform,
+    pub semaphore1: *mut nu::SemaphorePlatform,
+    pub semaphore2: *mut nu::SemaphorePlatform,
     pub res_update_thread: *mut nn::os::ThreadType,
     pub res_loading_thread: *mut nn::os::ThreadType,
     pub res_inflate_thread: *mut nn::os::ThreadType,
-    unk3: *const (),
+    pub load_request_buffer: *const (),
     pub res_lists: [ResList; 5],
     pub filesystem_info: *mut FilesystemInfo,
-    pub region_idx: u32,
-    pub language_idx: u32,
-    unk4: u32,
-    pub state: i16,
-    pub is_loader_thread_running: bool,
+    pub locale_idx: u32,
+    pub language_idx: Region,
+    pub loading_thread_state: u32,
+
+    pub uninterrupted_updates: u8,
+    pub current_index_loaded_status: bool,
+
+    pub should_terminate: bool,
     unk5: u8,
     pub data_arc_string: [u8; 256],
     unk6: *const (),
-    pub data_arc_filenx: *mut *mut FileNX,
+    pub data_arc_filenx: *mut *mut File_NX,
     pub buffer_size: usize,
     pub buffer_array: [*const u8; 2],
     pub buffer_array_idx: u32,
@@ -219,16 +210,17 @@ pub struct ResServiceNX {
     pub processing_dir_idx_single: u32,
     pub current_index: u32,
     pub current_dir_index: u32,
+    pub is_updated: bool,
     // Still need to add some
 }
 
 #[repr(C)]
-pub struct InflateFile {
+pub struct ZstdDstream {
     pub content: *mut u8,
     pub size: usize,
 }
 
-impl InflateFile {
+impl ZstdDstream {
     pub fn len(&self) -> usize {
         self.size
     }

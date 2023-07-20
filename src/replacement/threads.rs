@@ -5,7 +5,7 @@ use smash_arc::{ArcLookup, Hash40};
 use super::FileInfoFlagsExt;
 use crate::{
     config, hashes, offsets, reg_w, reg_x,
-    resource::{self, InflateFile, LoadInfo, LoadType},
+    resource::{self, ZstdDstream, LoadInfo, LoadType},
     GLOBAL_FILESYSTEM,
 };
 
@@ -47,7 +47,7 @@ fn inflate_incoming(ctx: &InlineCtx) {
 }
 
 #[hook(offset = offsets::inflate_dir_file())]
-fn inflate_dir_file(arg: u64, out_decomp_data: &mut InflateFile, comp_data: &InflateFile) -> u64 {
+fn inflate_dir_file(arg: u64, out_decomp_data: &mut ZstdDstream, comp_data: &ZstdDstream) -> u64 {
     trace!(
         target: "no-mod-path",
         "[ResInflateThread::inflate_dir_file] Incoming decompressed filesize: {:#x}",
