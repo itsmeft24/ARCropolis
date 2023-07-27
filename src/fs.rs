@@ -525,7 +525,7 @@ impl CachedFilesystem {
             }
         }
 
-        println!("Adding files to dir infos...");
+        println!("[arcropolis::fs] Adding files to dir infos...");
         // Add new files to the dir infos
         for (hash, files) in self.config.new_dir_files.iter() {
             replacement::addition::add_files_to_directory(&mut context, hash.to_smash_arc(), files.iter().map(|hash| hash.to_smash_arc()).collect());

@@ -481,6 +481,7 @@ pub fn main() {
         skyline::install_hook!(skip_opening_cutscene);
     }
 
+    resource::threads::install();
     replacement::install();
     fixes::install();
 
