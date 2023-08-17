@@ -6,6 +6,22 @@ use smash_arc::{ArcLookup, FilePathIdx};
 use super::*;
 use crate::resource::*;
 
+
+pub fn get_redirected_load_state_recursive(dir: *const LoadedDirectory) -> LoadState {
+    unsafe {
+        let load_state = (*dir).state;
+        if !(*dir).redirection_directory.is_null() {
+            let redirected_load_state = get_redirected_load_state_recursive((*dir).redirection_directory);
+            if redirected_load_state >= load_state {
+                return load_state;
+            } else {
+                return redirected_load_state;
+            }
+        }
+        return load_state;
+    }
+}
+
 #[hook(offset = 0x3542660)]
 pub unsafe fn res_loading_thread(service: &mut ResServiceNX) {
     let mut data_arc = std::fs::File::open("rom:/data.arc").unwrap();
@@ -58,7 +74,25 @@ pub unsafe fn res_loading_thread(service: &mut ResServiceNX) {
                 for load_request in load_requests {
                     println!("[arcropolis::ResLoadingThread] Tending to load request: {:#?}", load_request);
                     match load_request.ty {
-                        LoadType::LoadFromFilePackage => panic!("Mass-loading is not implemented yet!"),
+                        LoadType::LoadFromFilePackage => {
+                            
+                            if load_request.directory_index != 0xFF_FFFF {
+                                nn::os::LockMutex(service.filesystem_info.mutex);
+                                let loaded_dir = &mut service.filesystem_info.get_loaded_directories()[load_request.directory_index as usize];
+                                if loaded_dir.file_group_index != 0xFF_FFFF && get_redirected_load_state_recursive(loaded_dir) == LoadState::Unloaded {
+                                    loaded_dir.state = LoadState::Unknown;
+                                }
+                                nn::os::UnlockMutex(service.filesystem_info.mutex);
+                                
+                                let arc = &service.filesystem_info.path_info.arc;
+                                let dir_info = &arc.get_dir_infos()[load_request.directory_index as usize];
+
+                                if dir_info.flags.is_symlink()
+
+                            }
+                            //panic!("Mass-loading is not implemented yet!")
+                            
+                        },
                         LoadType::StandaloneFile => {
                             let file_path_index = load_request.filepath_index as usize;
                             nn::os::LockMutex(service.filesystem_info.mutex);

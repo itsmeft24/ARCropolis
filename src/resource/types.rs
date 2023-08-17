@@ -10,7 +10,7 @@ use super::{containers::{CppVector, ResList}, nu};
 use super::nu::*;
 
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Eq)]
 pub enum LoadState {
     Unused = 0,
     Unloaded = 1,
@@ -133,7 +133,7 @@ pub struct FilesystemInfo {
     pub loaded_filepath_count: u32,
     pub loaded_data_count: u32,
     pub loaded_filepath_list: CppVector<u32>,
-    pub loaded_directories: *const LoadedDirectory,
+    pub loaded_directories: *mut LoadedDirectory,
     pub loaded_directory_len: u32,
     pub loaded_directory_count: u32,
     pub loaded_directory_list: CppVector<u32>,
